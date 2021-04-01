@@ -57,7 +57,7 @@ class BookingRepository extends BaseRepository
      */
     public function getUsersJobs($user_id)
     {
-        $cuser = User::find($user_id);
+        $cuser = User::find($user_id); //Use midelware to find the user by user id
         $usertype = '';
         $emergencyJobs = array();
         $noramlJobs = array();
@@ -65,7 +65,7 @@ class BookingRepository extends BaseRepository
             $jobs = $cuser->jobs()->with('user.userMeta', 'user.average', 'translatorJobRel.user.average', 'language', 'feedback')->whereIn('status', ['pending', 'assigned', 'started'])->orderBy('due', 'asc')->get();
             $usertype = 'customer';
         } elseif ($cuser && $cuser->is('translator')) {
-            $jobs = Job::getTranslatorJobs($cuser->id, 'new');
+            $jobs = Job::getTranslatorJobs($cuser->id, 'new'); // Should be define in Distance repository class
             $jobs = $jobs->pluck('jobs')->all();
             $usertype = 'translator';
         }
@@ -79,7 +79,7 @@ class BookingRepository extends BaseRepository
             }
             $noramlJobs = collect($noramlJobs)->each(function ($item, $key) use ($user_id) {
                 $item['usercheck'] = Job::checkParticularJob($user_id, $item);
-            })->sortBy('due')->all();
+            })->sortBy('due')->all(); // This query will slow your application becuase you are triversing the whole data
         }
 
         return ['emergencyJobs' => $emergencyJobs, 'noramlJobs' => $noramlJobs, 'cuser' => $cuser, 'usertype' => $usertype];
@@ -97,7 +97,7 @@ class BookingRepository extends BaseRepository
         } else {
             $pagenum = "1";
         }
-        $cuser = User::find($user_id);
+        $cuser = User::find($user_id); //Use midelware to find the user by user id
         $usertype = '';
         $emergencyJobs = array();
         $noramlJobs = array();
@@ -108,7 +108,7 @@ class BookingRepository extends BaseRepository
         } elseif ($cuser && $cuser->is('translator')) {
             $jobs_ids = Job::getTranslatorJobsHistoric($cuser->id, 'historic', $pagenum);
             $totaljobs = $jobs_ids->total();
-            $numpages = ceil($totaljobs / 15);
+            $numpages = ceil($totaljobs / 15); //You must use paginate function for pagination
 
             $usertype = 'translator';
 
@@ -187,7 +187,7 @@ class BookingRepository extends BaseRepository
             }
 
             if ($data['immediate'] == 'yes') {
-                $due_carbon = Carbon::now()->addMinute($immediatetime);
+                $due_carbon = Carbon::now()->addMinute($immediatetime); // Should be in common class and define function accordingly
                 $data['due'] = $due_carbon->format('Y-m-d H:i:s');
                 $data['immediate'] = 'yes';
                 $data['customer_phone_type'] = 'yes';
